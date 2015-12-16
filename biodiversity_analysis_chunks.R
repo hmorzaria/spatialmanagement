@@ -1,7 +1,7 @@
 # This is our external R script called biodiversity_analysis_chunks.R
 # chunks:
 # Hem Nalini Morzaria Luna hmorzarialuna@gmail.com
-# August 2015
+# Dec 2015
 
 # setpreferences: library prefs
 #getbiodiversity: retrieve and clean up biodiversity files
