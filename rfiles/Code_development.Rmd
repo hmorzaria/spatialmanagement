@@ -1,0 +1,67 @@
+---
+title: "Code_development"
+author: "Hem Nalini Morzaria-Luna"
+date: "December 18, 2015"
+output: html_document
+---
+
+**Code is stored and updated in https://github.com/hmorzaria/spatialmanagement/tree/current_code**
+
+**Raster_extent_corridor.R**
+
+ 1. Takes intensity indices calculated from CEDO, PANGAS and fishery logbook data (see lower sections for details on these files).
+ 2. For each community sums all rasters for each species from different sources.
+ 3. Normalizes between min - 1
+ 4. Saves rasters of fishing intensity (file name  is: [community, species, "FI"]).
+ 5. Adds frame of emtpy cells (file name  is: [community, species, "FI_COR"])
+ 6. Takes conflict rasters from CEDO workshops (see details below)
+ 7. Makes raster for vaquita exclusion area from exclusion polygon and adds empty frame (file name is: vaquita_exclusion).
+
+**Fisher_conflict_CEDO.R**
+1. Takes polygons of conflicts surveyed in focus group workshops
+2. Rasterizes polygons (file name  is: [community, species, "CF"])
+3. Adds empty frame (file name  is: [community, species, "CF"])
+
+**Fisher_conflict_CEDO_rev.R**
+1. Takes polygons of conflicts revised with communities
+2. Rasterizes polygons (file name  is: [community, species, "rev_CF"])
+3. Adds empty frame (file name  is: [community, species, "rev_CF"])
+
+**Resample_rasters.R**
+1. Resamples SDM models using bilinear interpolation to switch to same resolution as other data
+2. Normalizes between 0 and 1. Saves as raster (file name  is: [species, "RES"])
+3. Adds empty frame (file name  is: [community, species, "RES_COR"])
+
+**Organization_CEDO_fishing_intensity_corridor.R** 
+
+1. Takes database of GPS points taken from CEDO's survey of fishers during beach landings and when leaving ports. 
+2. Cleans up points to make sure they are within corridor (uses corridor polygon incuding wetlands). 
+3. For each community and species, takes each spatial location and converts it to a raster and  sums it to the other spatial locations to create a raster for each species within a community (file name is: [community, species,  "cedo_sp"]).  
+4. Then for each community takes the raster for each species and divides it by the sum of all species rasters in a community (file name  is: [community, species, "cedo_In"]). This is the fishing intensity by species by community.
+5. Averages intensity by species across communities (file name  is: [species, "cedo_Indx"]). This is the fishing intensity by species. 
+6. Uses price matrix multiplied by intensity to estimate economic importance (file name is: [species, "cedo_IE"]). This is the economic index by species, but it is equal to fishing intensity (except for units), use when summing across species.
+
+**Organization_PANGAS_interviews_intensity_corridor.R**
+
+ 1. Takes database of participatory mapping polygons (Moreno-Baez 2010).
+ 2. Subsets communities in the corridor
+ 3. Normalizes polygons by dividing importance (as assigned by fishers as 1 or 0.5) by polygon area and normalizing the resulting value between the minimum and 1. This is fishing intensity by species across all subsetted communities (file name is: [species, "pangas_Ix"]).
+ 4. Uses price matrix multiplied by intensity to estimate economic importance (file name is: [species, "pangas_Eco"]). This is the economic index by species, but it is equal to fishing intensity (except for units), use when summing across species.
+ 5. Creates raster by location, masked to the corridor extent (file name is: [location, species, "pangas_In"] for fishing intensity and [location, species, "pangas_IE"]) for economic importance
+ 
+**Organization_bitacoras_fishing_intensity_corridor.R**
+ 1. Takes database of polygons from fisher logbooks.
+ 2. Subsets communities in the corridor.
+ 3. For each community, rasterizes each polygon for each species, assigns weight and sums for that species (file name is: [community, species, "bitac_sp"]).
+ 4. Normalizes rasters by dividing each between the sum of all species in that community. This is fishing intensity by species and community (file name is: [species, "bitac_In"]).
+ 5. Uses price matrix multiplied by intensity to estimate economic importance (file name is: [species, "bitac_IE"]). This is the economic index by species, but it is equal to fishing intensity (except for units), use when summing across species.
+
+**Fisher_management_zones.R**
+1. Takes shapefiles of preferred fisher management areas and conflict areas from Nov 2015 workshop.
+2. Adds a new field (W) that is then updated manually following pictures of the maps used in the workshop ** this section will be greyed out after this step is finalized to prevent over writing**
+3. Separates multipart polygons and rasterizes
+4. Adds raster to either conflict or fisheries raster
+5. Saves and copies resulting files to Zonation file directory for January 2016
+
+**Move_files.R and Move_files_Jan2016.R**
+1. Copies result rasters from Zonation directories to a folder called results
