@@ -13,8 +13,8 @@ rm(list=ls())
 
 graphics.off()
 
-pathToSaveShapes = "E:/Archivos/1Archivos/Articulos/En preparacion/Spatial_management/Analisis/Zonation/Scenarios_Nov2015/Zonation_files"
-datapath = "E:/Archivos/1Archivos/Articulos/En preparacion/Spatial_management/Datos/Conflictos_codificados/"
+pathToSaveShapes = "E:/Archivos/1Archivos/Articulos/En preparacion/Spatial_management/Analisis/Zonation/Scenarios_Jan2016/Original_data"
+datapath = "E:/Archivos/1Archivos/Articulos/En preparacion/Spatial_management/Datos/Conflictos_revisados/"
 mainpath = "E:/Archivos/1Archivos/Articulos/En preparacion/Spatial_management/"
 
 setwd(mainpath)
@@ -22,7 +22,7 @@ setwd(mainpath)
 #Species names and prices
 species_data = fread("species_names.csv", header=TRUE)
 
-setwd("E:/Archivos/1Archivos/Articulos/En preparacion/Spatial_management/Analisis/Zonation/Scenarios_Nov2015/Frame")
+setwd("E:/Archivos/1Archivos/Articulos/En preparacion/Spatial_management/Analisis/Zonation/Scenarios_Jan2016/Frame")
 poly.r = readOGR(".", "corridor_wetland_polygon")
 north.r = raster("Frame_corridor_final.tif")
 buffer.r = raster("frame_buffer")
@@ -41,7 +41,7 @@ setwd(datapath)
 shape.files = list.files(getwd(),  pattern="MC.shp$", full.names=FALSE)
 #' revalue species codes
 new.sp = c("JAI"="CALBEL","ANG"="SQUCAL","CAM"= "LITSTY", "CCR" = "PHYERY", "GUI" = "RHIPRO", "LEN" = "PARPLE", "CCN"  = "HEXNIG")
-           
+
 for(eachfile in 1:length(shape.files))
 {
   setwd(datapath)
@@ -71,13 +71,13 @@ for(eachfile in 1:length(shape.files))
   out.r[is.na(out.r)] <- 0
   out.r = mask(out.r,poly.r)
   setwd(pathToSaveShapes)
-  writeRaster(out.r, filename=paste(name.loc,new.name,"CF",sep="_"), format="GTiff", overwrite=TRUE)  
+  writeRaster(out.r, filename=paste(name.loc,new.name,"rev_CF",sep="_"), format="GTiff", overwrite=TRUE)  
   X11()
   plot(out.r)
 }
 
 setwd(pathToSaveShapes)
-file.list=list.files(getwd(),  pattern="*CF.tif$", full.names=FALSE)
+file.list=list.files(getwd(),  pattern="*rev_CF.tif$", full.names=FALSE)
 
 for(eachlayer in 1:length(file.list)) {
   all.sp.loc = raster(file.list[eachlayer])
