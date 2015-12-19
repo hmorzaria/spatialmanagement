@@ -73,7 +73,7 @@ for(eachfile in 1:length(shape.files))
   shape.file.name = paste(name.loc,name.sp, sep="_")
   #' add new field for category fishing area or conflict
   poly.data$W = 1
-  X11()
+  #X11()
   plot(poly.data)
   setwd(pathToSaveShapes)
   writeOGR(poly.data, ".", shape.file.name,driver="ESRI Shapefile",overwrite_layer=TRUE)
@@ -97,7 +97,7 @@ for(eachfile in 1:length(shape.files))
   #' break apart name elements
   shape.file.name = shape.files[eachfile] %>% strsplit(.,"[.]") %>% 
     unlist %>% .[1]
-  print(name.loc)
+  print(shape.file.name)
  #' read polygon
   poly.data = readOGR(".", shape.file.name) 
 
@@ -110,7 +110,7 @@ for(eachfile in 1:length(shape.files))
   #' result is a list
   each.poly = poly.data %>%  disaggregate
 #' for each polygon rasterize depending on whether is preferred
-#' area or conflict
+#' area (1) or conflict (2)
   for(eachpolygon in 1:length(each.poly)){
   #' exctract polygon
     this.polygon = each.poly@polygons[eachpolygon] %>% SpatialPolygons
@@ -119,15 +119,15 @@ for(eachfile in 1:length(shape.files))
     
       if(this.polygon$W == 1){
       #' rasterize using mask raster
-      out.r <- rasterize(this.polygon, mask.raster,field=this.polygon@data$W)
-      out.r[is.na(out.r)] <- 0
-      fishing.r = mask(out.r,poly.r) %>% sum(fishing.r,.)
+      fish.r <- rasterize(this.polygon, mask.raster,field=this.polygon@data$W)
+      fish.r[is.na(fish.r)] <- 0
+      fishing.r = mask(fish.r,poly.r) %>% sum(fishing.r,.)
       fishing.r[is.na(fishing.r)] <- 0
         } else if(this.polygon$W == 2){
       #' rasterize using mask raster
-      out.r <- rasterize(this.polygon, mask.raster,field=this.polygon@data$W)
-      out.r[is.na(out.r)] <- 0
-      conflict.r = mask(out.r,poly.r) %>% sum(conflict.r,.)
+      conf.r <- rasterize(this.polygon, mask.raster,field=this.polygon@data$W)
+      conf.r[is.na(conf.r)] <- 0
+      conflict.r = mask(conf.r,poly.r) %>% sum(conflict.r,.)
       conflict.r[is.na(conflict.r)] <- 0
     }
     }#end each polygon multipart
@@ -135,15 +135,15 @@ for(eachfile in 1:length(shape.files))
     this.polygon = poly.data
     if(this.polygon$W == 1){
       #' rasterize using mask raster
-      out.r <- rasterize(this.polygon, mask.raster,field=this.polygon@data$W)
-      out.r[is.na(out.r)] <- 0
-      fishing.r = mask(out.r,poly.r) %>% sum(fishing.r,.)
+      fish.r <- rasterize(this.polygon, mask.raster,field=this.polygon@data$W)
+      fish.r[is.na(fish.r)] <- 0
+      fishing.r = mask(fish.r,poly.r) %>% sum(fishing.r,.)
       fishing.r[is.na(fishing.r)] <- 0
     } else if(this.polygon$W == 2){
       #' rasterize using mask raster
-      out.r <- rasterize(this.polygon, mask.raster,field=this.polygon@data$W)
-      out.r[is.na(out.r)] <- 0
-      conflict.r = mask(out.r,poly.r) %>% sum(conflict.r,.)
+      conf.r <- rasterize(this.polygon, mask.raster,field=this.polygon@data$W)
+      conf.r[is.na(conf.r)] <- 0
+      conflict.r = mask(conf.r,poly.r) %>% sum(conflict.r,.)
       conflict.r[is.na(conflict.r)] <- 0
     }
   }# end single polygon
@@ -158,7 +158,7 @@ for(eachfile in 1:length(shape.files))
   frame.raster = merge(conflict.r,buffer.r)
   frame.raster[frame.raster==255] <- -9999
  mask(frame.raster,buffer.r) %>% writeRaster(., filename=paste(shape.file.name,"CON_COR",sep="_"), format="GTiff", overwrite=TRUE)  
-  }
+  } 
   if(max(getValues(fishing.r))>0){
   writeRaster(fishing.r, filename=paste(shape.file.name,"FSA",sep="_"), format="GTiff", overwrite=TRUE)  
     X11()
@@ -167,7 +167,7 @@ for(eachfile in 1:length(shape.files))
   #' add empty frame
   frame.raster = merge(fishing.r,buffer.r)
   frame.raster[frame.raster==255] <- -9999
-  mask(frame.raster,buffer.r) %>% writeRaster(., filename=paste(shape.file.name,"CON_COR",sep="_"), format="GTiff", overwrite=TRUE)  
+  mask(frame.raster,buffer.r) %>% writeRaster(., filename=paste(shape.file.name,"FSA_COR",sep="_"), format="GTiff", overwrite=TRUE)  
   }
 } #endshapefile
 

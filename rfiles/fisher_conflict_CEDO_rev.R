@@ -91,3 +91,12 @@ for(eachlayer in 1:length(file.list)) {
   all.masked = mask(frame.raster,buffer.r)
   writeRaster(all.masked, filename=paste(name.sp.loc,"COR",sep="_"), format="GTiff", overwrite=TRUE)  
 } # close layers
+
+setwd(pathToSaveShapes)
+
+from.dir <- "/Archivos/1Archivos/Articulos/En preparacion/Spatial_management/Analisis/Zonation/Scenarios_Jan2016/Original_data"
+to.dir   <- "E:/Archivos/1Archivos/Articulos/En preparacion/Spatial_management/Analisis/Zonation/Scenarios_Jan2016/Zonation_files"
+
+files    <- list.files(path = from.dir, pattern="rank.compressed",full.names = TRUE, recursive = TRUE)
+for (f in files) file.copy(from = f, to = to.dir)
+
