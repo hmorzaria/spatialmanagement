@@ -4,16 +4,27 @@
 #' organize shapefiles from fisher workshops
 #' selecting management areas
 #' for spatial management project
-x = c("gdata","ggplot2","reshape","dplyr","RColorBrewer","classInt",
-      "rgdal","rgeos","magrittr","maptools","raster","data.table","wesanderson", "plyr")
+if(!require(dismo)){install.packages("dismo"); library(dismo)}
+if(!require(data.table)){install.packages("data.table"); library(data.table)}
+if(!require(XML)){install.packages("XML"); library(XML)}
+if(!require(jsonlite)){install.packages("jsonlite"); library(jsonlite)}
+if(!require(graphics)){install.packages("graphics"); library(graphics)}
+if(!require(maps)){install.packages("maps"); library(maps)}
+if(!require(maptools)){install.packages("maptools"); library(maptools)}
+if(!require(rgeos)){install.packages("rgeos"); library(rgeos)}
+if(!require(rgdal)){install.packages("rgdal"); library(rgdal)}
+if(!require(magrittr)){install.packages("magrittr"); library(magrittr)}
+if(!require(dplyr)){install.packages("dplyr"); library(dplyr)}
+if(!require(Hmisc)){install.packages("Hmisc"); library(Hmisc)}
+if(!require(rgdal)){install.packages("rgdal"); library(rgdal)}
+if(!require(readxl)){install.packages("readxl"); library(readxl)}
 
-lapply(x, require, character.only = TRUE)
 #' clean space
 rm(list=ls())
 graphics.off()
 #' set working directories
-pathToSaveShapes = "E:/Archivos/1Archivos/Articulos/En preparacion/Spatial_management/Analisis/Zonation/Scenarios_Jan2016/Original_data"
-datapath = "E:/Archivos/1Archivos/Articulos/En preparacion/Spatial_management/Datos/Mapas_areas_prioritarias_bentonicos/Mapas_Taller_Nov_2015"
+pathToSaveShapes = "E:/Archivos/1Archivos/Articulos/En preparacion/Spatial_management/Analisis/Zonation/Scenarios_Jan2016/Original_data/Nov2015_workshop_polygons"
+datapath = "E:/Archivos/1Archivos/Articulos/En preparacion/Spatial_management/Analisis/Zonation/Scenarios_Nov2015/Mapas_areas_prioritarias_bentonicos/Poligonos_Mapas_Taller_Nov_2015"
 mainpath = "E:/Archivos/1Archivos/Articulos/En preparacion/Spatial_management/"
 
 setwd(mainpath)
@@ -42,8 +53,7 @@ location.folders <- list.dirs(full.names = TRUE,recursive=FALSE)
 
 #folders are by community
 
-for (eachfolder in 1:length(location.folders)) 
-{
+for (eachfolder in 1:length(location.folders)) {
   setwd(datapath)
   name.sp.folder = location.folders[eachfolder] %>% 
     strsplit(.,"/")%>% unlist %>% .[2]
