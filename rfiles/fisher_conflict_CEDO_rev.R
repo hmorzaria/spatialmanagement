@@ -4,10 +4,21 @@
 #' hmorzarialuna@gmail.com
 #' install.packages()
 #' 
-x = c("gdata","ggplot2","reshape","dplyr","RColorBrewer","classInt",
-      "rgdal","rgeos","magrittr","maptools","raster","data.table","wesanderson", "plyr")
+if(!require(dismo)){install.packages("dismo"); library(dismo)}
+if(!require(data.table)){install.packages("data.table"); library(data.table)}
+if(!require(XML)){install.packages("XML"); library(XML)}
+if(!require(jsonlite)){install.packages("jsonlite"); library(jsonlite)}
+if(!require(graphics)){install.packages("graphics"); library(graphics)}
+if(!require(maps)){install.packages("maps"); library(maps)}
+if(!require(maptools)){install.packages("maptools"); library(maptools)}
+if(!require(rgeos)){install.packages("rgeos"); library(rgeos)}
+if(!require(rgdal)){install.packages("rgdal"); library(rgdal)}
+if(!require(magrittr)){install.packages("magrittr"); library(magrittr)}
+if(!require(dplyr)){install.packages("dplyr"); library(dplyr)}
+if(!require(Hmisc)){install.packages("Hmisc"); library(Hmisc)}
+if(!require(rgdal)){install.packages("rgdal"); library(rgdal)}
+if(!require(readxl)){install.packages("readxl"); library(readxl)}
 
-lapply(x, require, character.only = TRUE)
 
 rm(list=ls())
 
@@ -38,24 +49,38 @@ mask.raster[is.na(mask.raster)] <- 0
 
 setwd(datapath)
 #' list files for conflict
-shape.files = list.files(getwd(),  pattern="MC.shp$", full.names=FALSE)
 #' revalue species codes
-new.sp = c("JAI"="CALBEL","ANG"="SQUCAL","CAM"= "LITSTY", "CCR" = "PHYERY", "GUI" = "RHIPRO", "LEN" = "PARPLE", "CCN"  = "HEXNIG")
+new.sp = c("CALBEL"="CALBEL","HEXNIG"="HEXNIG","Escarlopa2"="SPOCAL","Escarlopa1"="SPOCAL","Pulpo"="OCTSPP","PULPO"="OCTSPP", "JAI"="CALBEL","ANG"="SQUCAL","CAM"= "LITSTY", "CROSA2" = "PHYERY","CROSA1" = "PHYERY", "CROSA" = "PHYERY", "CCR" = "PHYERY", "GUI" = "RHIPRO", "LEN" = "PARPLE", "CCN"  = "HEXNIG")
 
+folders = list.dirs(full.names = FALSE)
+indx.folders = grep('Conflictos|conflictos', folders)
+conflict.folder = folders[indx.folders]
+for (eachfolder in 1:length(conflict.folder)){
+  
+  this.folder = conflict.folder[eachfolder] %>% 
+ paste(datapath,.,sep="")
+  
+  setwd(this.folder)
+  
+  shape.files = list.files(getwd(),  pattern="*.shp$", full.names=FALSE) 
+  
 for(eachfile in 1:length(shape.files))
 {
-  setwd(datapath)
+  setwd(this.folder)
   print(eachfile)
-  this.folder = shape.files[eachfile]
-  shape.file.name = unlist(strsplit(this.folder,"[.]"))[1]
+  shape.file.name = shape.files[eachfile] %>% strsplit("[.]") %>% 
+    unlist %>% .[1]
   
-  name.loc = unlist(strsplit(this.folder,"_"))[1]
+  name.loc = shape.files[eachfile] %>% strsplit("_") %>% 
+    unlist %>% strsplit("[.]") %>% unlist %>% .[1]
   
   if(name.loc =="BSJ"){
     name.loc ="SJO"
   } 
   print(name.loc)
-  name.sp.folder = unlist(strsplit(this.folder,"_"))[2]
+  name.sp.folder = shape.files[eachfile] %>% strsplit("_") %>% 
+    unlist %>% strsplit("[.]") %>% unlist %>% .[2]
+  
   new.name = new.sp[name.sp.folder] %>% as.character
   
   poly.data = readOGR(".", shape.file.name) 
@@ -69,13 +94,13 @@ for(eachfile in 1:length(shape.files))
   #' rasterize using mask raster
   out.r <- rasterize(poly.data, mask.raster,field=poly.data@data$W)
   out.r[is.na(out.r)] <- 0
-  out.r = mask(out.r,poly.r)
+  out.r = raster::mask(out.r,poly.r)
   setwd(pathToSaveShapes)
   writeRaster(out.r, filename=paste(name.loc,new.name,"rev_CF",sep="_"), format="GTiff", overwrite=TRUE)  
   X11()
   plot(out.r)
 }
-
+}
 setwd(pathToSaveShapes)
 file.list=list.files(getwd(),  pattern="*rev_CF.tif$", full.names=FALSE)
 
@@ -88,7 +113,7 @@ for(eachlayer in 1:length(file.list)) {
   #' add empty frame
   frame.raster = merge(all.sp.loc,buffer.r)
   frame.raster[frame.raster==255] <- -9999
-  all.masked = mask(frame.raster,buffer.r)
+  all.masked = raster::mask(frame.raster,buffer.r)
   writeRaster(all.masked, filename=paste(name.sp.loc,"COR",sep="_"), format="GTiff", overwrite=TRUE)  
 } # close layers
 
@@ -97,6 +122,6 @@ setwd(pathToSaveShapes)
 from.dir <- "/Archivos/1Archivos/Articulos/En preparacion/Spatial_management/Analisis/Zonation/Scenarios_Jan2016/Original_data"
 to.dir   <- "E:/Archivos/1Archivos/Articulos/En preparacion/Spatial_management/Analisis/Zonation/Scenarios_Jan2016/Zonation_files"
 
-files    <- list.files(path = from.dir, pattern="rank.compressed",full.names = TRUE, recursive = TRUE)
+files    <- list.files(path = from.dir, pattern="*rev_CF_COR.tif$",full.names = TRUE, recursive = TRUE)
 for (f in files) file.copy(from = f, to = to.dir)
 

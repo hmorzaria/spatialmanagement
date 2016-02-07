@@ -65,3 +65,15 @@ output: html_document
 
 **Move_files.R and Move_files_Jan2016.R**
 1. Copies result rasters from Zonation directories to a folder called results
+
+**Clam_zones.R**
+1. Creates polygons from coordinates of clam areas
+2. Creates raster with frame for Zonations
+
+**biodiversity_raster**
+1. Takes species_richness_corridor.tif from biodiversity model folder
+2. Adds empty frame for Zonation
+
+**Zonation_models.R**
+1. Runs bat files for zonation models
+2. Optional code to open all input files from Zonation directories in case they need to be modified

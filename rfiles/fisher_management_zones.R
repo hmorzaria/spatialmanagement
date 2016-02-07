@@ -23,10 +23,10 @@ if(!require(readxl)){install.packages("readxl"); library(readxl)}
 rm(list=ls())
 graphics.off()
 #' set working directories
-pathToSaveShapes = "E:/Archivos/1Archivos/Articulos/En preparacion/Spatial_management/Analisis/Zonation/Scenarios_Jan2016/Original_data/Nov2015_workshop_polygons"
+pathToSaveShapes = "E:/Archivos/1Archivos/Articulos/En preparacion/Spatial_management/Analisis/Zonation/Scenarios_Jan2016/Original_data/Nov2015_workshop_polygons_raw"
 datapath = "E:/Archivos/1Archivos/Articulos/En preparacion/Spatial_management/Analisis/Zonation/Scenarios_Nov2015/Mapas_areas_prioritarias_bentonicos/Poligonos_Mapas_Taller_Nov_2015"
 mainpath = "E:/Archivos/1Archivos/Articulos/En preparacion/Spatial_management/"
-
+newdata = "E:/Archivos/1Archivos/Articulos/En preparacion/Spatial_management/Analisis/Zonation/Scenarios_Jan2016/Original_data/Nov2015_workshop_polygons"
 setwd(mainpath)
 
 #' read species names and prices
@@ -78,7 +78,7 @@ for(eachfile in 1:length(shape.files))
     name.loc ="SJO"
   } 
   print(name.loc)
-  poly.data = readOGR(".", shape.file.name) %>% spTransform(crs.geo)
+  poly.data = readOGR(".", shape.file.name)
   #' make new name with updated location name
   shape.file.name = paste(name.loc,name.sp, sep="_")
   #' add new field for category fishing area or conflict
@@ -96,20 +96,20 @@ for(eachfile in 1:length(shape.files))
 #' whether they are conflicted areas (2)
 #' or preferred fishing zone (1)
  
-setwd(pathToSaveShapes)
+setwd(newdata)
 
 shape.files = list.files(getwd(),  pattern="*.shp$", full.names=FALSE)
 
 for(eachfile in 1:length(shape.files))
 {
-  setwd(pathToSaveShapes)
+  setwd(newdata)
   print(eachfile)
   #' break apart name elements
   shape.file.name = shape.files[eachfile] %>% strsplit(.,"[.]") %>% 
     unlist %>% .[1]
   print(shape.file.name)
  #' read polygon
-  poly.data = readOGR(".", shape.file.name) 
+  poly.data = readOGR(".", shape.file.name) %>% spTransform(crs.geo)
 
   #' make empty rasters  
   conflict.r = mask.raster
@@ -122,7 +122,7 @@ for(eachfile in 1:length(shape.files))
 #' for each polygon rasterize depending on whether is preferred
 #' area (1) or conflict (2)
   for(eachpolygon in 1:length(each.poly)){
-  #' exctract polygon
+  #' extract polygon
     this.polygon = each.poly@polygons[eachpolygon] %>% SpatialPolygons
     proj4string(this.polygon) <- crs.geo
     this.polygon$W = each.poly$W[eachpolygon]
@@ -131,14 +131,16 @@ for(eachfile in 1:length(shape.files))
       #' rasterize using mask raster
       fish.r <- rasterize(this.polygon, mask.raster,field=this.polygon@data$W)
       fish.r[is.na(fish.r)] <- 0
-      fishing.r = mask(fish.r,poly.r) %>% sum(fishing.r,.)
+      fishing.r = raster::mask(fish.r,poly.r) %>% sum(fishing.r,.)
       fishing.r[is.na(fishing.r)] <- 0
+      print("Fishing area")
         } else if(this.polygon$W == 2){
       #' rasterize using mask raster
       conf.r <- rasterize(this.polygon, mask.raster,field=this.polygon@data$W)
       conf.r[is.na(conf.r)] <- 0
-      conflict.r = mask(conf.r,poly.r) %>% sum(conflict.r,.)
+      conflict.r = raster::mask(conf.r,poly.r) %>% sum(conflict.r,.)
       conflict.r[is.na(conflict.r)] <- 0
+      print("Conflict polygon")
     }
     }#end each polygon multipart
   } else if (length(poly.data)==1){
@@ -147,27 +149,27 @@ for(eachfile in 1:length(shape.files))
       #' rasterize using mask raster
       fish.r <- rasterize(this.polygon, mask.raster,field=this.polygon@data$W)
       fish.r[is.na(fish.r)] <- 0
-      fishing.r = mask(fish.r,poly.r) %>% sum(fishing.r,.)
+      fishing.r = raster::mask(fish.r,poly.r) %>% sum(fishing.r,.)
       fishing.r[is.na(fishing.r)] <- 0
     } else if(this.polygon$W == 2){
       #' rasterize using mask raster
       conf.r <- rasterize(this.polygon, mask.raster,field=this.polygon@data$W)
       conf.r[is.na(conf.r)] <- 0
-      conflict.r = mask(conf.r,poly.r) %>% sum(conflict.r,.)
+      conflict.r = raster::mask(conf.r,poly.r) %>% sum(conflict.r,.)
       conflict.r[is.na(conflict.r)] <- 0
     }
   }# end single polygon
   
   if(max(getValues(conflict.r))>0){
-  writeRaster(conflict.r, filename=paste(shape.file.name,"CON",sep="_"), format="GTiff", overwrite=TRUE)  
+    writeRaster(conflict.r, filename=paste(shape.file.name,"CON",sep="_"), format="GTiff", overwrite=TRUE)  
   X11()
   plot(conflict.r)
     #add empty frame and save again
   buffer.r[buffer.r==1] <- 0
   #' add empty frame
-  frame.raster = merge(conflict.r,buffer.r)
-  frame.raster[frame.raster==255] <- -9999
- mask(frame.raster,buffer.r) %>% writeRaster(., filename=paste(shape.file.name,"CON_COR",sep="_"), format="GTiff", overwrite=TRUE)  
+  conflict.raster = merge(conflict.r,buffer.r)
+  conflict.raster[conflict.raster==255] <- -9999
+ raster::mask(conflict.raster,buffer.r) %>% writeRaster(., filename=paste(shape.file.name,"CON_COR",sep="_"), format="GTiff", overwrite=TRUE)  
   } 
   if(max(getValues(fishing.r))>0){
   writeRaster(fishing.r, filename=paste(shape.file.name,"FSA",sep="_"), format="GTiff", overwrite=TRUE)  
@@ -175,17 +177,17 @@ for(eachfile in 1:length(shape.files))
     plot(fishing.r)
   buffer.r[buffer.r==1] <- 0
   #' add empty frame
-  frame.raster = merge(fishing.r,buffer.r)
-  frame.raster[frame.raster==255] <- -9999
-  mask(frame.raster,buffer.r) %>% writeRaster(., filename=paste(shape.file.name,"FSA_COR",sep="_"), format="GTiff", overwrite=TRUE)  
+  fishing.raster = merge(fishing.r,buffer.r)
+  fishing.raster[fishing.raster==255] <- -9999
+  raster::mask(fishing.raster,buffer.r) %>% writeRaster(., filename=paste(shape.file.name,"FSA_COR",sep="_"), format="GTiff", overwrite=TRUE)  
   }
 } #endshapefile
 
 # move final rasters to Zonation files directory
-setwd("E:/Archivos/1Archivos/Articulos/En preparacion/Spatial_management/Analisis/Zonation/Scenarios_Jan2016/Original_data")
-from.dir <- "/Archivos/1Archivos/Articulos/En preparacion/Spatial_management/Analisis/Zonation/Scenarios_Jan2016/Original_data"
+setwd("E:/Archivos/1Archivos/Articulos/En preparacion/Spatial_management/Analisis/Zonation/Scenarios_Jan2016/Original_data/Nov2015_workshop_polygons")
+from.dir <- "/Archivos/1Archivos/Articulos/En preparacion/Spatial_management/Analisis/Zonation/Scenarios_Jan2016/Original_data/Nov2015_workshop_polygons"
 to.dir   <- "E:/Archivos/1Archivos/Articulos/En preparacion/Spatial_management/Analisis/Zonation/Scenarios_Jan2016/Zonation_files"
 
 files    <- list.files(path = from.dir, pattern="_COR",full.names = TRUE, recursive = TRUE)
-for (f in files) file.copy(from = f, to = to.dir)
+for (f in files) file.copy(from = f, to = to.dir, overwrite = TRUE)
 
